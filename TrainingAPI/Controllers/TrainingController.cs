@@ -12,16 +12,37 @@ namespace TrainingAPI.Controllers
     [RoutePrefix("Api/Training")]
     public class TrainingController : ApiController
     {
-        
-        TrainingEntities objEntity = new TrainingEntities();
-        
+
+        // TrainingEntities objEntity = new TrainingEntities();
+
+        public TrainingEntities objEntity { get; set; }
+
+        ///
+        /// Default constructor
+        ///
+        public TrainingController()
+        {
+            this.objEntity = new TrainingEntities();
+        }
+
+        ///
+        /// Constructor used by Moq
+        ///
+        /// Repository 
+        public TrainingController(TrainingEntities mockDB)
+        {
+            this.objEntity = mockDB;
+        }
+
         [HttpGet]
         [Route("AllTrainings")]
         public IQueryable<TrainingInfo> GetTrainingInfo()
         {
+            List<TrainingInfo> objTraining = new List<TrainingInfo>();
             try
             {
-                return objEntity.TrainingInfoes;
+                objTraining = objEntity.TrainingInfoes.ToList();
+                return objTraining.AsQueryable();
             }
             catch (Exception)
             {
@@ -33,12 +54,14 @@ namespace TrainingAPI.Controllers
         [Route("GetTrainingsInfoById/{TrainingId}")]
         public IHttpActionResult GetTrainingInfoById(string trainingId)
         {
-            TrainingInfo objEmp = new TrainingInfo();
+            TrainingInfo objTraining = new TrainingInfo();
             int ID = Convert.ToInt32(trainingId);
             try
             {
-                objEmp = objEntity.TrainingInfoes.Find(ID);
-                if (objEmp == null)
+
+                objTraining= objEntity.TrainingInfoes.Where(t => t.TId == ID).ToList().FirstOrDefault();
+               // objTraining = objEntity.TrainingInfoes.Find(ID);
+                if (objTraining == null)
                 {
                     return NotFound();
                 }
@@ -49,14 +72,13 @@ namespace TrainingAPI.Controllers
                 throw;
             }
 
-            return Ok(objEmp);
+            return Ok(objTraining);
         }
 
         [HttpPost]
         [Route("InsertTrainingInfo")]
-        public IHttpActionResult PostEmaployee(TrainingInfo data)
+        public IHttpActionResult PostTrainingInfo(TrainingInfo data)
         {
-
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
@@ -87,13 +109,13 @@ namespace TrainingAPI.Controllers
 
             try
             {
-                TrainingInfo objEmp = new TrainingInfo();
-                objEmp = objEntity.TrainingInfoes.Find(training.TId);
-                if (objEmp != null)
+                TrainingInfo objTraining = new TrainingInfo();
+                objTraining = objEntity.TrainingInfoes.Find(training.TId);
+                if (objTraining != null)
                 {
-                    objEmp.TrainingName = training.TrainingName;
-                    objEmp.StartDate = training.StartDate;
-                    objEmp.EndDate = training.EndDate;
+                    objTraining.TrainingName = training.TrainingName;
+                    objTraining.StartDate = training.StartDate;
+                    objTraining.EndDate = training.EndDate;
                 }
                 int i = this.objEntity.SaveChanges();
 
